@@ -1,11 +1,10 @@
-const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const { wait, setupPage, setNativeValue } = require('./common');
 
 async function checkSKT(browser, address) {
   const result = { provider: 'SKB', status: 'error', products: [], raw: '' };
   const page = await browser.newPage();
   try {
-    await page.setViewport({ width: 1280, height: 900 });
-    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await setupPage(page);
 
     await page.goto('https://www.bworld.co.kr/myb/product/join/address/svcAveSearch.do', {
       waitUntil: 'networkidle0',
@@ -13,31 +12,24 @@ async function checkSKT(browser, address) {
     });
     await wait(3000);
 
-    // 주소 입력 (네이티브 setter 사용)
     await page.evaluate((addr) => {
       const el = document.querySelector('#inpNameStreet');
       if (!el) throw new Error('주소 입력란을 찾을 수 없습니다');
-      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-      setter.call(el, addr);
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
+      setNativeValue(el, addr);
     }, address);
     await wait(2000);
 
-    // 조회 버튼 클릭
     await page.evaluate(() => {
       document.querySelector('#btnNameSearchStreet').click();
     });
     await wait(3000);
 
-    // 주소 선택 (라디오 버튼)
     const radio = await page.$('input[type="radio"]');
     if (radio) {
       await radio.evaluate(el => el.click());
       await wait(1000);
     }
 
-    // 상세 주소 입력
     const detailInput = await page.$('#inpDetailStreet');
     if (detailInput) {
       await detailInput.click({ clickCount: 3 });
@@ -45,7 +37,6 @@ async function checkSKT(browser, address) {
       await wait(500);
     }
 
-    // 서비스 조회 버튼
     await page.evaluate(() => {
       const btn = document.querySelector('#GA_CY_MENU_C00000001');
       if (btn) { btn.click(); return; }
@@ -77,7 +68,7 @@ async function checkSKT(browser, address) {
   } catch (e) {
     result.error = e.message;
   } finally {
-    await page.close();
+    try { await page.close(); } catch (e) { /* ignore */ }
   }
   return result;
 }

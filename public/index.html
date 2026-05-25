@@ -214,6 +214,8 @@ async function startSearch() {
         setError(p, r.error || '조회 실패');
       } else if (r.status === 'unavailable') {
         setUnavailable(p);
+      } else if (r.status === 'unknown') {
+        setUnavailable(p);
       } else {
         setAvailable(p, r.products);
       }
