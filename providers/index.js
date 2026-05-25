@@ -32,7 +32,7 @@ async function checkAll(address) {
       }
     };
   } finally {
-    await browser.close();
+    try { await browser.close(); } catch (e) { /* ignore */ }
   }
 }
 
