@@ -1,4 +1,4 @@
-const { wait, shortenAddress, setupPage, setNativeValue } = require('./common');
+const { wait, shortenAddress, setupPage } = require('./common');
 
 async function checkLGU(browser, address) {
   const result = { provider: 'LGU+', status: 'error', products: [], raw: '' };
@@ -16,7 +16,10 @@ async function checkLGU(browser, address) {
     await page.evaluate((addr) => {
       const el = document.querySelector('input.c-inp[placeholder*="도로명"]');
       if (!el) throw new Error('주소 입력란을 찾을 수 없습니다');
-      setNativeValue(el, addr);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(el, addr);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
     }, shortAddr);
     await wait(1000);
 
@@ -37,7 +40,9 @@ async function checkLGU(browser, address) {
       fields.forEach(sel => {
         const el = document.querySelector(sel);
         if (el) {
-          setNativeValue(el, '101');
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+          setter.call(el, '101');
+          el.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
     });

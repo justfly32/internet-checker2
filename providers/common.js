@@ -8,17 +8,10 @@ function shortenAddress(address) {
     .replace(/^[가-힣]+(시|군|구)\s+/, '');
 }
 
-function setNativeValue(el, value) {
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-  setter.call(el, value);
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  el.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
 async function setupPage(page) {
   await page.setViewport({ width: 1280, height: 900 });
   await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
   page.on('dialog', async dialog => { await dialog.accept(); });
 }
 
-module.exports = { wait, shortenAddress, setNativeValue, setupPage };
+module.exports = { wait, shortenAddress, setupPage };

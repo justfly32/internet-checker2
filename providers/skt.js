@@ -1,4 +1,4 @@
-const { wait, setupPage, setNativeValue } = require('./common');
+const { wait, setupPage } = require('./common');
 
 async function checkSKT(browser, address) {
   const result = { provider: 'SKB', status: 'error', products: [], raw: '' };
@@ -15,7 +15,10 @@ async function checkSKT(browser, address) {
     await page.evaluate((addr) => {
       const el = document.querySelector('#inpNameStreet');
       if (!el) throw new Error('주소 입력란을 찾을 수 없습니다');
-      setNativeValue(el, addr);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(el, addr);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
     }, address);
     await wait(2000);
 

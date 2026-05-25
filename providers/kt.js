@@ -1,4 +1,4 @@
-const { wait, shortenAddress, setupPage, setNativeValue } = require('./common');
+const { wait, shortenAddress, setupPage } = require('./common');
 
 async function checkKT(browser, address) {
   const result = { provider: 'KT', status: 'error', products: [], raw: '' };
@@ -16,7 +16,10 @@ async function checkKT(browser, address) {
     await page.evaluate((addr) => {
       const el = document.querySelector('#searchFindNm');
       if (!el) throw new Error('주소 입력란을 찾을 수 없습니다');
-      setNativeValue(el, addr);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(el, addr);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
     }, shortAddr);
     await wait(1000);
 
@@ -44,7 +47,10 @@ async function checkKT(browser, address) {
     await page.evaluate(() => {
       const el = document.querySelector('#bldgNmDetail');
       if (el) {
-        setNativeValue(el, '101호');
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(el, '101호');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
     await wait(500);
