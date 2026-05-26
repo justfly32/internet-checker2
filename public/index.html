@@ -153,17 +153,25 @@ function setLoading() {
   });
 }
 
-function setError(provider, msg) {
-  document.getElementById(`badge-${provider}`).className = 'badge error';
-  document.getElementById(`badge-${provider}`).textContent = '오류';
-  document.getElementById(`body-${provider}`).innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+function setError(provider) {
+  document.getElementById(`badge-${provider}`).className = 'badge unavailable';
+    document.getElementById(`badge-${provider}`).textContent = '조회 실패';
+  document.getElementById(`body-${provider}`).innerHTML = `
+    <div class="empty-state"><div class="icon">❌</div><div>해당 주소가 조회되지 않습니다</div></div>`;
 }
 
 function setUnavailable(provider) {
   document.getElementById(`badge-${provider}`).className = 'badge unavailable';
-  document.getElementById(`badge-${provider}`).textContent = '서비스 불가';
+  document.getElementById(`badge-${provider}`).textContent = '조회 실패';
   document.getElementById(`body-${provider}`).innerHTML = `
-    <div class="empty-state"><div class="icon">❌</div><div>해당 주소에서 서비스 이용이 어렵습니다</div></div>`;
+    <div class="empty-state"><div class="icon">❌</div><div>해당 주소가 조회되지 않습니다</div></div>`;
+}
+
+function setUnknown(provider, hint) {
+  document.getElementById(`badge-${provider}`).className = 'badge unavailable';
+  document.getElementById(`badge-${provider}`).textContent = '조회 실패';
+  document.getElementById(`body-${provider}`).innerHTML = `
+    <div class="empty-state"><div class="icon">❌</div><div>${hint || '해당 주소가 조회되지 않습니다'}</div></div>`;
 }
 
 function setAvailable(provider, products) {
@@ -187,6 +195,36 @@ function setAvailable(provider, products) {
   document.getElementById(`body-${provider}`).innerHTML = html;
 }
 
+async function checkProvider(provider, address) {
+  try {
+    const res = await fetch(`/api/check/${provider}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `서버 오류: ${res.status}`);
+    }
+    return data.result;
+  } catch (e) {
+    return { status: 'error', error: e.message };
+  }
+}
+
+function renderProvider(provider, result) {
+  if (result.status === 'error') {
+    setError(provider);
+  } else if (result.status === 'unavailable') {
+    setUnavailable(provider);
+  } else if (result.status === 'unknown') {
+    setUnknown(provider, result.hint);
+  } else {
+    setAvailable(provider, result.products);
+  }
+}
+
 async function startSearch() {
   const address = document.getElementById('addressInput').value.trim();
   if (!address) {
@@ -196,34 +234,19 @@ async function startSearch() {
 
   setLoading();
   document.getElementById('searchBtn').disabled = true;
+  document.getElementById('timestamp').textContent = '';
+
+  const startTime = Date.now();
 
   try {
-    const res = await fetch('/api/check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address })
-    });
+    // 각 통신사를 개별로 병렬 호출하여 완료되는 대로 결과 표시
+    await Promise.all(providers.map(async (p) => {
+      const result = await checkProvider(p, address);
+      renderProvider(p, result);
+    }));
 
-    if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-    const data = await res.json();
-
-    // 각 통신사 결과 렌더링
-    ['skt', 'kt', 'lgu'].forEach(p => {
-      const r = data.results[p];
-      if (r.status === 'error') {
-        setError(p, r.error || '조회 실패');
-      } else if (r.status === 'unavailable') {
-        setUnavailable(p);
-      } else if (r.status === 'unknown') {
-        setUnavailable(p);
-      } else {
-        setAvailable(p, r.products);
-      }
-    });
-
-    document.getElementById('timestamp').textContent = `조회 시각: ${new Date(data.timestamp).toLocaleString('ko-KR')}`;
-  } catch (e) {
-    providers.forEach(p => setError(p, e.message));
+    const elapsed = Date.now() - startTime;
+    document.getElementById('timestamp').textContent = `총 소요시간: ${elapsed}ms | 완료 시각: ${new Date().toLocaleString('ko-KR')}`;
   } finally {
     document.getElementById('searchBtn').disabled = false;
   }
