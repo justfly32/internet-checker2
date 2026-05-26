@@ -1,27 +1,56 @@
 const express = require('express');
-const { checkAll } = require('./providers');
+const { checkAll, checkProvider } = require('./providers');
 
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
+const REQUEST_TIMEOUT = 120000; // 2 minutes
+app.use((req, res, next) => {
+  req.setTimeout(REQUEST_TIMEOUT);
+  res.setTimeout(REQUEST_TIMEOUT);
+  next();
+});
+
 // ===== API =====
+
+// Check all providers (batch)
 app.post('/api/check', async (req, res) => {
   const { address } = req.body;
   if (!address) return res.status(400).json({ error: '주소를 입력해주세요.' });
 
-  console.log(`[${new Date().toISOString()}] 조회: ${address}`);
+  console.log(`[${new Date().toISOString()}] Batch 조회: ${address}`);
   const start = Date.now();
 
   try {
     const data = await checkAll(address);
-
     const elapsed = Date.now() - start;
-    console.log(`완료: ${elapsed}ms`);
-
+    console.log(`Batch 완료: ${elapsed}ms`);
     res.json({ ...data, elapsed });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Check single provider (streaming)
+app.post('/api/check/:provider', async (req, res) => {
+  const { address } = req.body;
+  const { provider } = req.params;
+  if (!address) return res.status(400).json({ error: '주소를 입력해주세요.' });
+  if (!['skt', 'kt', 'lgu'].includes(provider)) {
+    return res.status(400).json({ error: 'Invalid provider. Use skt, kt, or lgu.' });
+  }
+
+  console.log(`[${new Date().toISOString()}] ${provider} 조회: ${address}`);
+  const start = Date.now();
+
+  try {
+    const result = await checkProvider(provider, address);
+    const elapsed = Date.now() - start;
+    console.log(`${provider} 완료: ${elapsed}ms`);
+    res.json({ provider, result, elapsed });
+  } catch (e) {
+    res.status(500).json({ provider, error: e.message });
   }
 });
 

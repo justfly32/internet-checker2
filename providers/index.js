@@ -3,23 +3,48 @@ const { checkKT } = require('./kt');
 const { checkLGU } = require('./lgu');
 const puppeteer = require('puppeteer');
 
-async function checkAll(address) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-web-security'
-    ]
-  });
+const BROWSER_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+  '--disable-web-security'
+];
 
+async function withBrowser(fn) {
+  const browser = await puppeteer.launch({ headless: true, args: BROWSER_ARGS });
   try {
+    return await fn(browser);
+  } finally {
+    try { await browser.close(); } catch (e) { /* ignore */ }
+  }
+}
+
+async function withRetryResult(fn, retries = 1) {
+  const result = await fn();
+  if (result.status === 'error' && retries > 0) {
+    console.log(`Retrying ${result.provider || 'provider'} after error: ${result.error}`);
+    await new Promise(r => setTimeout(r, 2000));
+    return withRetryResult(fn, retries - 1);
+  }
+  return result;
+}
+
+async function checkProvider(provider, address) {
+  const checker = { skt: checkSKT, kt: checkKT, lgu: checkLGU }[provider];
+  if (!checker) throw new Error(`Unknown provider: ${provider}`);
+
+  return withBrowser(async (browser) => {
+    return withRetryResult(() => checker(browser, address), 1);
+  });
+}
+
+async function checkAll(address) {
+  return withBrowser(async (browser) => {
     const [skt, kt, lgu] = await Promise.allSettled([
-      checkSKT(browser, address),
-      checkKT(browser, address),
-      checkLGU(browser, address),
+      withRetryResult(() => checkSKT(browser, address), 1),
+      withRetryResult(() => checkKT(browser, address), 1),
+      withRetryResult(() => checkLGU(browser, address), 1),
     ]);
 
     return {
@@ -31,9 +56,7 @@ async function checkAll(address) {
         lgu: lgu.status === 'fulfilled' ? lgu.value : { provider: 'LGU+', status: 'error', error: lgu.reason?.message }
       }
     };
-  } finally {
-    try { await browser.close(); } catch (e) { /* ignore */ }
-  }
+  });
 }
 
 // CLI
@@ -46,4 +69,4 @@ if (require.main === module) {
   checkAll(address).then(r => console.log(JSON.stringify(r, null, 2)));
 }
 
-module.exports = { checkAll };
+module.exports = { checkAll, checkProvider };

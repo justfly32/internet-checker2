@@ -32,6 +32,9 @@ async function checkKT(browser, address) {
     const afterSearch = await page.evaluate(() => document.body.innerText);
     if (afterSearch.includes('검색된 주소가 없습니다')) {
       result.status = 'unknown';
+      if (/(로|길)\s*\d/.test(address)) {
+        result.hint = '도로명주소 조회가 되지 않습니다. 지번 주소로 다시 시도해 주세요.';
+      }
       result.raw = afterSearch.substring(0, 3000);
       await page.close();
       return result;
