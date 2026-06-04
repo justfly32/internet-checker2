@@ -124,7 +124,32 @@
     </div>
   </div>
   <div class="timestamp" id="timestamp"></div>
+  <div style="margin-top:12px; text-align:center">
+    <button class="btn btn-secondary" onclick="toggleHistory()">📋 조회 내역</button>
+  </div>
+  <div id="history-panel" class="history-panel" style="display:none">
+    <div class="history-header">
+      <span>조회 내역</span>
+      <button class="btn btn-secondary" onclick="loadHistory()" style="padding:4px 12px;font-size:12px">🔄 새로고침</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
 </div>
+
+<style>
+.history-panel { background:#1e293b; border:1px solid #334155; border-radius:12px; margin-top:16px; padding:16px; }
+.history-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:700; }
+.history-item { padding:10px 0; border-bottom:1px solid #334155; }
+.history-item:last-child { border-bottom:none; }
+.history-addr { font-weight:600; color:#f8fafc; margin-bottom:4px; }
+.history-meta { display:flex; gap:12px; font-size:12px; color:#94a3b8; margin-bottom:4px; }
+.history-elapsed { color:#60a5fa; }
+.history-status { display:flex; gap:12px; font-size:12px; }
+.hs { padding:2px 8px; border-radius:4px; }
+.hs.skt { color:#f59e0b; background:#f59e0b20; }
+.hs.kt { color:#ef4444; background:#ef444420; }
+.hs.lgu { color:#a855f7; background:#a855f720; }
+</style>
 
 <script>
 const providers = ['skt', 'kt', 'lgu'];
@@ -262,7 +287,52 @@ function clearResults() {
   document.getElementById('timestamp').textContent = '';
 }
 
-// Enter key
+// ===== History =====
+
+let historyVisible = false;
+const statusLabels = { available: '가능', unavailable: '불가', unknown: '알수없음', error: '오류' };
+
+async function loadHistory() {
+  const panel = document.getElementById('history-panel');
+  const list = document.getElementById('history-list');
+  try {
+    const res = await fetch('/api/history');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = '<div class="empty-state" style="padding:20px"><div class="icon">📭</div><div>조회 내역이 없습니다</div></div>';
+      return;
+    }
+    list.innerHTML = data.map(item => {
+      const r = item.results || {};
+      const skt = statusLabels[r.skt?.status] || '-';
+      const kt = statusLabels[r.kt?.status] || '-';
+      const lgu = statusLabels[r.lgu?.status] || '-';
+      const ts = new Date(item.timestamp).toLocaleString('ko-KR');
+      return `<div class="history-item">
+        <div class="history-addr">${item.address}</div>
+        <div class="history-meta">
+          <span>${ts}</span>
+          <span class="history-elapsed">${(item.elapsed / 1000).toFixed(1)}s</span>
+        </div>
+        <div class="history-status">
+          <span class="hs skt">SKB: ${skt}</span>
+          <span class="hs kt">KT: ${kt}</span>
+          <span class="hs lgu">LGU+: ${lgu}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="error-msg">내역 로딩 실패: ${e.message}</div>`;
+  }
+}
+
+function toggleHistory() {
+  const panel = document.getElementById('history-panel');
+  historyVisible = !historyVisible;
+  panel.style.display = historyVisible ? 'block' : 'none';
+  if (historyVisible) loadHistory();
+}
+
 document.getElementById('addressInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') startSearch();
 });

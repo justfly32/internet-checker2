@@ -1,5 +1,6 @@
 const express = require('express');
 const { checkAll, checkProvider } = require('./providers');
+const db = require('./db');
 
 const app = express();
 app.use(express.json());
@@ -27,6 +28,7 @@ app.post('/api/check', async (req, res) => {
     const elapsed = Date.now() - start;
     console.log(`Batch 완료: ${elapsed}ms`);
     res.json({ ...data, elapsed });
+    db.save({ address, elapsed, results: data.results }).catch(e => console.error('History save error:', e.message));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -51,6 +53,26 @@ app.post('/api/check/:provider', async (req, res) => {
     res.json({ provider, result, elapsed });
   } catch (e) {
     res.status(500).json({ provider, error: e.message });
+  }
+});
+
+// ===== History =====
+
+app.get('/api/history', async (req, res) => {
+  try {
+    const list = await db.getAll();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/history', async (req, res) => {
+  try {
+    await db.clear();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
