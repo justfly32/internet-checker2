@@ -31,6 +31,22 @@ node server.js
 
 브라우저에서 `http://localhost:3000` 으로 접속합니다.
 
+> 환경변수 `BROWSERLESS_WS_ENDPOINT`가 설정되지 않으면 자동으로 로컬 Chrome(Puppeteer)을 사용합니다.
+
+### 로컬 실행 (PC에 설치)
+
+```
+setup.bat      (최초 1회: Node.js 확인 + npm install)
+start.bat      (서버 실행 + 브라우저 오픈)
+```
+
+또는 직접 실행:
+```bash
+node server.js
+```
+
+> Windows에서 Puppeteer가 Chrome을 찾지 못하면 https://chrome.google.com 에서 Chrome을 설치하거나 `setup.bat`을 먼저 실행하세요.
+
 ### CLI
 ```bash
 node checker.js "서울 강남구 테헤란로 152"
@@ -73,11 +89,3 @@ start.command      macOS 실행
 | `PUPPETEER_SKIP_DOWNLOAD` | `true` |
 
 Puppeteer 작업은 [Browserless.io](https://www.browserless.io)의 원격 Chrome을 사용합니다. Free 티어에서 월 1,500회 요청 가능하므로 로컬 Chrome이 필요 없습니다.
-
-### 로컬 실행
-
-```
-node server.js
-```
-
-환경변수 `BROWSERLESS_WS_ENDPOINT`가 설정되지 않으면 로컬에 설치된 Puppeteer Chrome을 사용합니다.
