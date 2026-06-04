@@ -130,7 +130,10 @@
   <div id="history-panel" class="history-panel" style="display:none">
     <div class="history-header">
       <span>조회 내역</span>
-      <button class="btn btn-secondary" onclick="loadHistory()" style="padding:4px 12px;font-size:12px">🔄 새로고침</button>
+      <div>
+        <button class="btn btn-secondary" onclick="loadHistory()" style="padding:4px 12px;font-size:12px">🔄</button>
+        <button class="btn btn-secondary" onclick="clearHistory()" style="padding:4px 12px;font-size:12px;margin-left:4px">🗑️ 전체 삭제</button>
+      </div>
     </div>
     <div id="history-list"></div>
   </div>
@@ -323,6 +326,16 @@ async function loadHistory() {
     }).join('');
   } catch (e) {
     list.innerHTML = `<div class="error-msg">내역 로딩 실패: ${e.message}</div>`;
+  }
+}
+
+async function clearHistory() {
+  if (!confirm('전체 조회 내역을 삭제하시겠습니까?')) return;
+  try {
+    await fetch('/api/history', { method: 'DELETE' });
+    loadHistory();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
   }
 }
 
