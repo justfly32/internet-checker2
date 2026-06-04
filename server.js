@@ -61,6 +61,19 @@ app.post('/api/check/:provider', async (req, res) => {
 app.get('/api/history', async (req, res) => {
   try {
     const list = await db.getAll();
+    if (req.query.format === 'csv') {
+      const header = 'ID,주소,조회시간,소요시간(ms),SKB,KT,LGU+\n';
+      const rows = list.map(r => {
+        const skt = r.results?.skt?.status || '-';
+        const kt = r.results?.kt?.status || '-';
+        const lgu = r.results?.lgu?.status || '-';
+        const addr = `"${r.address.replace(/"/g, '""')}"`;
+        return `${r.id},${addr},${r.timestamp},${r.elapsed},${skt},${kt},${lgu}`;
+      }).join('\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="search_history.csv"');
+      return res.send('\uFEFF' + header + rows);
+    }
     res.json(list);
   } catch (e) {
     res.status(500).json({ error: e.message });

@@ -131,8 +131,9 @@
     <div class="history-header">
       <span>조회 내역</span>
       <div>
-        <button class="btn btn-secondary" onclick="loadHistory()" style="padding:4px 12px;font-size:12px">🔄</button>
-        <button class="btn btn-secondary" onclick="clearHistory()" style="padding:4px 12px;font-size:12px;margin-left:4px">🗑️ 전체 삭제</button>
+        <button class="btn btn-secondary" onclick="loadHistory()" style="padding:4px 12px;font-size:12px" title="새로고침">🔄</button>
+        <a class="btn btn-secondary" href="/api/history?format=csv" download style="padding:4px 12px;font-size:12px;text-decoration:none;margin-left:4px" title="CSV 다운로드">📥</a>
+        <button class="btn btn-secondary" onclick="clearHistory()" style="padding:4px 12px;font-size:12px;margin-left:4px" title="전체 삭제">🗑️</button>
       </div>
     </div>
     <div id="history-list"></div>
