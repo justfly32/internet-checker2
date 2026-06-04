@@ -12,7 +12,15 @@ const BROWSER_ARGS = [
 ];
 
 async function withBrowser(fn) {
-  const browser = await puppeteer.launch({ headless: true, args: BROWSER_ARGS });
+  const wsEndpoint = process.env.BROWSERLESS_WS_ENDPOINT;
+
+  let browser;
+  if (wsEndpoint) {
+    browser = await puppeteer.connect({ browserWSEndpoint: wsEndpoint });
+  } else {
+    browser = await puppeteer.launch({ headless: true, args: BROWSER_ARGS });
+  }
+
   try {
     return await fn(browser);
   } finally {
