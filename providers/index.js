@@ -28,10 +28,10 @@ async function withBrowser(fn) {
   }
 }
 
-async function withRetryResult(fn, retries = 1) {
+async function withRetryResult(fn, retries = 2) {
   const result = await fn();
-  if (result.status === 'error' && retries > 0) {
-    console.log(`Retrying ${result.provider || 'provider'} after error: ${result.error}`);
+  if ((result.status === 'error' || result.status === 'unavailable' || result.status === 'unknown') && retries > 0) {
+    console.log(`Retrying ${result.provider || 'provider'} (status: ${result.status})`);
     await new Promise(r => setTimeout(r, 2000));
     return withRetryResult(fn, retries - 1);
   }
