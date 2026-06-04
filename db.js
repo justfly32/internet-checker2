@@ -42,7 +42,7 @@ async function save(entry) {
       elapsed: entry.elapsed,
       results: entry.results
     });
-    if (error) console.error('Supabase save error:', error.message);
+    if (error) console.error('Supabase save error:', JSON.stringify(error));
   } else {
     const sqlite = getSqlite();
     if (!sqlite) return;
@@ -105,4 +105,13 @@ async function remove(id) {
   }
 }
 
-module.exports = { save, getAll, clear, remove };
+function isBetterSqlite3Available() {
+  try {
+    require('better-sqlite3');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { save, getAll, clear, remove, useSupabase, isBetterSqlite3Available };

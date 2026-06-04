@@ -105,5 +105,18 @@ app.delete('/api/history', async (req, res) => {
   }
 });
 
+app.get('/api/debug', (req, res) => {
+  res.json({
+    useSupabase: db.useSupabase,
+    supabaseUrlSet: !!process.env.SUPABASE_URL,
+    supabaseUrlPrefix: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 20) + '...' : null,
+    supabaseKeySet: !!process.env.SUPABASE_KEY,
+    supabaseKeyPrefix: process.env.SUPABASE_KEY ? process.env.SUPABASE_KEY.substring(0, 12) + '...' : null,
+    betterSqlite3Available: db.isBetterSqlite3Available(),
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`서버: http://localhost:${PORT}`));
