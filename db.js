@@ -21,9 +21,10 @@ async function save(entry) {
     const Database = require('better-sqlite3');
     const dbPath = path.join(__dirname, 'data', 'history.db');
     const sqlite = new Database(dbPath);
+    sqlite.pragma('encoding = "UTF-8"');
     sqlite.exec(`CREATE TABLE IF NOT EXISTS search_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      address TEXT NOT NULL,
+      address TEXT NOT NULL COLLATE NOCASE,
       timestamp TEXT NOT NULL DEFAULT (datetime('now')),
       elapsed INTEGER,
       results TEXT
@@ -46,16 +47,17 @@ async function getAll() {
     const Database = require('better-sqlite3');
     const dbPath = path.join(__dirname, 'data', 'history.db');
     const sqlite = new Database(dbPath);
+    sqlite.pragma('encoding = "UTF-8"');
     sqlite.exec(`CREATE TABLE IF NOT EXISTS search_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      address TEXT NOT NULL,
+      address TEXT NOT NULL COLLATE NOCASE,
       timestamp TEXT NOT NULL DEFAULT (datetime('now')),
       elapsed INTEGER,
       results TEXT
     )`);
     const rows = sqlite.prepare('SELECT * FROM search_history ORDER BY id DESC LIMIT 100').all();
     sqlite.close();
-    return rows.map(r => ({ ...r, results: JSON.parse(r.results) }));
+      return rows.map(r => ({ ...r, results: JSON.parse(r.results) }));
   }
 }
 
@@ -67,6 +69,7 @@ async function clear() {
     const Database = require('better-sqlite3');
     const dbPath = path.join(__dirname, 'data', 'history.db');
     const sqlite = new Database(dbPath);
+    sqlite.pragma('encoding = "UTF-8"');
     sqlite.exec('DELETE FROM search_history');
     sqlite.close();
   }
