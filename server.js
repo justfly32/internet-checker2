@@ -67,6 +67,15 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
+app.delete('/api/history/:id', async (req, res) => {
+  try {
+    await db.remove(Number(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.delete('/api/history', async (req, res) => {
   try {
     await db.clear();

@@ -75,4 +75,18 @@ async function clear() {
   }
 }
 
-module.exports = { save, getAll, clear };
+async function remove(id) {
+  if (useSupabase) {
+    const { error } = await db.from('search_history').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  } else {
+    const Database = require('better-sqlite3');
+    const dbPath = path.join(__dirname, 'data', 'history.db');
+    const sqlite = new Database(dbPath);
+    sqlite.pragma('encoding = "UTF-8"');
+    sqlite.prepare('DELETE FROM search_history WHERE id = ?').run(id);
+    sqlite.close();
+  }
+}
+
+module.exports = { save, getAll, clear, remove };

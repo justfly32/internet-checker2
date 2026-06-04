@@ -143,6 +143,9 @@
 .history-panel { background:#1e293b; border:1px solid #334155; border-radius:12px; margin-top:16px; padding:16px; }
 .history-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:700; }
 .history-item { padding:10px 0; border-bottom:1px solid #334155; }
+.history-item-top { display:flex; justify-content:space-between; align-items:center; }
+.history-del { background:none; border:none; color:#64748b; cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
+.history-del:hover { color:#f87171; background:#7f1d1d40; }
 .history-item:last-child { border-bottom:none; }
 .history-addr { font-weight:600; color:#f8fafc; margin-bottom:4px; }
 .history-meta { display:flex; gap:12px; font-size:12px; color:#94a3b8; margin-bottom:4px; }
@@ -312,7 +315,10 @@ async function loadHistory() {
       const lgu = statusLabels[r.lgu?.status] || '-';
       const ts = new Date(item.timestamp).toLocaleString('ko-KR');
       return `<div class="history-item">
-        <div class="history-addr">${item.address}</div>
+        <div class="history-item-top">
+          <div class="history-addr">${item.address}</div>
+          <button class="history-del" onclick="deleteHistoryItem(${item.id})" title="삭제">✕</button>
+        </div>
         <div class="history-meta">
           <span>${ts}</span>
           <span class="history-elapsed">${(item.elapsed / 1000).toFixed(1)}s</span>
@@ -326,6 +332,16 @@ async function loadHistory() {
     }).join('');
   } catch (e) {
     list.innerHTML = `<div class="error-msg">내역 로딩 실패: ${e.message}</div>`;
+  }
+}
+
+async function deleteHistoryItem(id) {
+  if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+  try {
+    await fetch(`/api/history/${id}`, { method: 'DELETE' });
+    loadHistory();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
   }
 }
 
