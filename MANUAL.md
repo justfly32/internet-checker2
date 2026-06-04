@@ -1012,3 +1012,68 @@ Supabase만 사용한다면 `better-sqlite3`가 필요 없으므로 이렇게 �
 ```
 
 **축하합니다!** 초보자용 방문자 메모장 프로젝트가 완성되었습니다.
+
+---
+
+## 부록: opencode / Claude Code로 빠르게 진행하기
+
+> AI 코딩 도구(opencode, Claude Code)를 사용하면 위의 모든 과정을 **명령어 한 줄**로 자동화할 수 있습니다.
+> 이미 Node.js, Git이 설치되어 있고 GitHub/Supabase 계정이 있다는 전제하에 사용합니다.
+
+### 1. 프로젝트 전체 생성
+
+opencode 또는 Claude Code가 설치된 터미널에서 아래 명령어를 입력하면 **서버 코드, HTML, .gitignore, package.json**을 한 번에 생성합니다.
+
+```
+$ opencode "방문자 메모장(Guestbook) Express + Supabase 프로젝트를 만들어줘. 서버 코드 server.js, public/index.html, .gitignore를 포함하고 Supabase 환경변수를 .env.example에 적어줘."
+```
+
+또는 Claude Code:
+```
+$ claude "방문자 메모장(Guestbook) Express + Supabase 프로젝트를 만들어줘. 서버 코드 server.js, public/index.html, .gitignore를 포함하고 Supabase 환경변수를 .env.example에 적어줘."
+```
+
+### 2. GitHub 업로드
+
+```
+$ opencode "이 프로젝트를 GitHub에 올려줘. 새 리포지토리 이름은 guestbook으로 해줘."
+```
+
+### 3. 배포 (Vercel 또는 Railway)
+
+**Vercel:**
+```
+$ opencode "이 프로젝트를 Vercel에 배포해줘. SUPABASE_URL과 SUPABASE_KEY 환경변수를 등록해야 해."
+```
+
+**Railway:**
+```
+$ opencode "이 프로젝트를 Railway에 배포해줘. SUPABASE_URL, SUPABASE_KEY, PORT=3000 환경변수를 등록해야 해."
+```
+
+### 4. Supabase DB 설정
+
+```
+$ opencode "Supabase에 memos 테이블을 만들어줘. id(BIGINT PK 자동증가), content(TEXT NOT NULL), created_at(TIMESTAMPTZ DEFAULT NOW()) 컬럼으로 구성해줘."
+```
+
+### 5. 환경변수 추가
+
+```
+$ opencode "Railway/Vercel에 SUPABASE_URL과 SUPABASE_KEY 환경변수를 추가해줘. 값은 내 Supabase 프로젝트에서 가져와서 등록해줘."
+```
+
+### AI 도구로 할 수 있는 추가 작업
+
+| 작업 | 명령어 예시 |
+|------|-----------|
+| 오류 분석 | `opencode "Railway 로그를 보고 에러 원인을 찾아줘"` |
+| 코드 수정 | `opencode "메모에 비밀번호 삭제 기능을 추가해줘"` |
+| DB 마이그레이션 | `opencode "memos 테이블에 writer 컬럼을 추가해줘"` |
+| 의존성 추가 | `opencode "날짜 포맷 라이브러리 dayjs를 설치해줘"` |
+
+> **팁:** opencode는 터미널에서 `opencode` 명령어로 실행합니다.
+> 설치: `npm install -g @opencode-ai/cli` 또는 https://opencode.ai 참고.
+>
+> Claude Code는 `claude` 명령어로 실행합니다.
+> 설치: https://docs.anthropic.com/en/docs/claude-code 참고.
