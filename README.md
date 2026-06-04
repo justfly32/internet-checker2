@@ -42,7 +42,7 @@ node checker.js "서울 강남구 테헤란로 152"
 server.js          Express 서버 + API
 checker.js         CLI 모드
 providers/
-  index.js         조회 오케스트레이터 (Puppeteer)
+  index.js         조회 오케스트레이터 (Puppeteer / Browserless.io)
   skt.js           SK Broadband 조회
   kt.js            KT 조회
   lgu.js           LGU+ 조회
@@ -54,3 +54,30 @@ start.command      macOS 실행
 ```
 
 조회에는 약 30~60초 소요됩니다.
+
+## 배포
+
+### Railway (현재 운영 중)
+
+**서비스 주소:** https://internet-checker2-production.up.railway.app/
+
+[Railway](https://railway.com) Free 플랜에 배포되어 있습니다.
+
+1. GitHub에 푸시
+2. Railway → **New Project** → **Deploy from GitHub repo**
+3. 환경변수 설정 (Variables):
+
+| 변수명 | 값 |
+|--------|-----|
+| `BROWSERLESS_WS_ENDPOINT` | `wss://chrome.browserless.io/ws?token=...` |
+| `PUPPETEER_SKIP_DOWNLOAD` | `true` |
+
+Puppeteer 작업은 [Browserless.io](https://www.browserless.io)의 원격 Chrome을 사용합니다. Free 티어에서 월 1,500회 요청 가능하므로 로컬 Chrome이 필요 없습니다.
+
+### 로컬 실행
+
+```
+node server.js
+```
+
+환경변수 `BROWSERLESS_WS_ENDPOINT`가 설정되지 않으면 로컬에 설치된 Puppeteer Chrome을 사용합니다.
